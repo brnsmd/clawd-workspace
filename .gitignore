@@ -1,0 +1,36 @@
+# Secrets - NEVER commit
+.env
+*.env
+secrets/
+*-secrets*
+*.key
+*.pem
+
+# Clawdbot runtime
+.clawdbot/
+sessions/
+logs/
+*.log
+
+# Config with tokens (keep template, ignore actual)
+clawdbot.yaml
+config.yaml
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Temp
+tmp/
+temp/
+*.tmp

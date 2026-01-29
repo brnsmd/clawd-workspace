@@ -1,0 +1,34 @@
+# Clawdbot Gateway Configuration Template
+# Copy to ~/clawd/clawdbot.yaml and fill in your values
+# 
+# Secrets should use environment variables: ${ANTHROPIC_API_KEY}
+
+workspace: ~/clawd
+
+anthropic:
+  apiKey: ${ANTHROPIC_API_KEY}
+
+# Default model
+model: anthropic/claude-sonnet-4-20250514
+
+# Channels - uncomment and configure as needed
+channels:
+  # telegram:
+  #   botToken: ${TELEGRAM_BOT_TOKEN}
+  #   allowlist:
+  #     - "227230975"  # Heorhii
+  
+  # slack:
+  #   appToken: ${SLACK_APP_TOKEN}
+  #   botToken: ${SLACK_BOT_TOKEN}
+  #   workspace: zav-hospital
+
+# Heartbeat (optional)
+# heartbeat:
+#   enabled: true
+#   intervalMinutes: 30
+
+# Node pairing (for laptop connection)
+# nodes:
+#   enabled: true
+#   autoApprove: false
