@@ -7,7 +7,7 @@
 set -euo pipefail
 
 CLAWD_USER="${CLAWD_USER:-htsapenko}"
-CLAWD_REPO="${CLAWD_REPO:-git@github.com:htsapenko/clawd-workspace.git}"
+CLAWD_REPO="${CLAWD_REPO:-git@github.com:brnsmd/clawd-workspace.git}"
 CLAWD_DIR="/home/${CLAWD_USER}/clawd"
 
 echo "🕷️  Broodbrother Gateway Bootstrap"

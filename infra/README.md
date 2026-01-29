@@ -22,10 +22,10 @@ Same bootstrap script works. Just ensure:
 
 ```bash
 # On fresh server as root:
-curl -fsSL https://raw.githubusercontent.com/htsapenko/clawd-workspace/main/scripts/bootstrap-gateway.sh | bash
+curl -fsSL https://raw.githubusercontent.com/brnsmd/clawd-workspace/main/scripts/bootstrap-gateway.sh | bash
 
 # Or clone and run:
-git clone git@github.com:htsapenko/clawd-workspace.git ~/clawd
+git clone git@github.com:brnsmd/clawd-workspace.git ~/clawd
 bash ~/clawd/scripts/bootstrap-gateway.sh
 ```
 
