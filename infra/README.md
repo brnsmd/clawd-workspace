@@ -4,7 +4,8 @@ This folder contains deployment configs for the Broodbrother gateway.
 
 ## Files
 
-- `../scripts/bootstrap-gateway.sh` — One-shot server setup script
+- `../scripts/bootstrap-gateway.sh` — Linux one-shot setup (Fedora/Ubuntu)
+- `../scripts/bootstrap-gateway-windows.ps1` — Windows one-shot setup
 - `clawdbot.yaml.template` — Config template (copy and fill in secrets)
 
 ## Deployment Options
@@ -12,11 +13,21 @@ This folder contains deployment configs for the Broodbrother gateway.
 ### Option A: VPS (Hetzner, DigitalOcean, etc.)
 See `../CLOUD-GATEWAY-PLAN.md`
 
-### Option B: Always-On Local Machine
-Same bootstrap script works. Just ensure:
-- Tailscale installed for remote access
-- UPS for power protection
-- Auto-login + systemd service
+### Option B: Always-On Windows Machine (Hospital Server)
+1. Open PowerShell as Administrator
+2. Run:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force
+   cd $env:USERPROFILE
+   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/brnsmd/clawd-workspace/main/scripts/bootstrap-gateway-windows.ps1" -OutFile "bootstrap.ps1"
+   .\bootstrap.ps1
+   ```
+3. Edit `.env` with API keys
+4. Create `clawdbot.yaml` from template
+5. Reboot or start the scheduled task
+
+### Option C: Always-On Linux Machine
+Same as Option A but use `bootstrap-gateway.sh`
 
 ## Quick Deploy
 
