@@ -2,35 +2,45 @@
 
 Skills define *how* tools work. This file is for *your* specifics — the stuff that's unique to your setup.
 
-## What Goes Here
+## Zav Project
 
-Things like:
-- Camera names and locations
-- SSH hosts and aliases  
-- Preferred voices for TTS
-- Speaker/room names
-- Device nicknames
-- Anything environment-specific
-
-## Examples
-
-```markdown
-### Cameras
-- living-room → Main area, 180° wide angle
-- front-door → Entrance, motion-triggered
-
-### SSH
-- home-server → 192.168.1.100, user: admin
-
-### TTS
-- Preferred voice: "Nova" (warm, slightly British)
-- Default speaker: Kitchen HomePod
+### bd (beads) - Issue Tracker
+```bash
+cd /var/home/htsapenko/Projects/Zav
+bd list          # All issues
+bd ready         # Unblocked work
+bd show Zav-xxx  # Issue details
+bd update Zav-xxx --status in_progress
+bd close Zav-xxx --reason "Done because..."
+bd create "Title" -p 1 -d "Description"
 ```
 
-## Why Separate?
+### Commands
+- `boss` — Start Boss TUI (auto-starts services)
+- `boss-relay` — Start with Tailscale for EMR access
+- `boss-status` — Check all services
 
-Skills are shared. Your setup is yours. Keeping them apart means you can update skills without losing your notes, and share skills without leaking your infrastructure.
+### Key Directories
+- `/var/home/htsapenko/Projects/Zav/` — Main project
+- `/var/home/htsapenko/Projects/Zav/boss-tui/` — Rust TUI + embedded server
+- `/var/home/htsapenko/Projects/Zav/cyberintern-tui/` — Doctor TUI
+- `/var/home/htsapenko/Projects/Zav/nurse-tui/` — Nurse TUI
+- `/var/home/htsapenko/Projects/Zav/.beads/` — Issue tracking
+
+### Secrets
+- `~/.config/zav-secrets.env` — API keys, tokens (Airtable, ClickUp, Slack, etc.)
 
 ---
 
-Add whatever helps you do your job. This is your cheat sheet.
+## Communication Channels
+
+### Telegram
+- Bot: @BroodBrotherBot
+- Heorhii's ID: 227230975
+
+### Slack
+- Workspace: Zav Hospital
+- Heorhii's user ID: U0AABU2LRS7
+
+### Email
+- tsapenko.heorhii@gmail.com (gog configured)
