@@ -2,6 +2,37 @@
 
 Skills define *how* tools work. This file is for *your* specifics — the stuff that's unique to your setup.
 
+## Brood Toolbox
+
+On Fedora Atomic, I have a dedicated toolbox container with extra tools:
+
+```bash
+# Enter toolbox
+toolbox enter brood
+
+# Or run single command
+toolbox run -c brood <command>
+```
+
+**Installed tools:**
+- `bat` - syntax-highlighted cat
+- `fzf` - fuzzy finder
+- `htop` - process viewer
+- `trash-cli` - safe deletion (trash-put, trash-list, trash-restore)
+- `tree` - directory visualization
+- `ffmpeg` - video/audio processing
+- `ImageMagick` - image processing (convert, identify, mogrify)
+- `pandoc` - document conversion
+- `jq` - JSON processing
+- `ripgrep` (rg) - fast grep
+- `fd` - fast find
+- `yt-dlp` - video/audio downloads
+
+**Python packages (pip --user):**
+- `gkeepapi` - Google Keep API (needs auth setup)
+
+---
+
 ## Zav Project
 
 ### bd (beads) - Issue Tracker
