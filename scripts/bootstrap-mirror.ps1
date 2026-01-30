@@ -1,18 +1,14 @@
 #Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    Bootstrap Clawdbot Mirror Gateway on Windows
-.DESCRIPTION
-    Sets up a mirrored Clawdbot instance that syncs with home via git.
-    Same workspace, same bot, manual handoff between locations.
+    Bootstrap Clawdbot Mirror Gateway on Windows (E: drive)
 .USAGE
-    # One-liner (run as Admin in PowerShell):
     Set-ExecutionPolicy Bypass -Scope Process -Force; iwr -Uri "https://raw.githubusercontent.com/brnsmd/clawd-workspace/main/scripts/bootstrap-mirror.ps1" -OutFile "$env:TEMP\bootstrap.ps1"; & "$env:TEMP\bootstrap.ps1"
 #>
 
 param(
     [string]$GatewayRepo = "https://github.com/brnsmd/clawd-workspace.git",
-    [string]$ClawdDir = "$env:USERPROFILE\clawd",
+    [string]$ClawdDir = "E:\clawd",
     [string]$NodeName = "work"
 )
 
@@ -27,6 +23,10 @@ function Write-Ok($msg) {
     Write-Host "  ✓ $msg" -ForegroundColor Green
 }
 
+function Write-Skip($msg) {
+    Write-Host "  → $msg (already installed)" -ForegroundColor Cyan
+}
+
 function Write-Warn($msg) {
     Write-Host "  ⚠ $msg" -ForegroundColor Yellow
 }
@@ -36,221 +36,192 @@ Write-Host "╔═════════════════════�
 Write-Host "║  🕷️  Broodbrother Mirror Setup (Windows)  🕷️     ║" -ForegroundColor Cyan
 Write-Host "║     Same brain, different body                    ║" -ForegroundColor Cyan
 Write-Host "╚═══════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  Target: $ClawdDir" -ForegroundColor Gray
 
 # ─────────────────────────────────────────────────────────────
-# 1. Prerequisites check
+# 1. Check Git
 # ─────────────────────────────────────────────────────────────
-Write-Step 1 7 "Checking prerequisites..."
+Write-Step 1 5 "Checking Git..."
 
-# Check winget
-if (!(Get-Command winget -ErrorAction SilentlyContinue)) {
-    Write-Host "  ✗ winget not found. Install App Installer from Microsoft Store:" -ForegroundColor Red
-    Write-Host "    https://apps.microsoft.com/store/detail/9NBLGGH4NNS1" -ForegroundColor Red
-    exit 1
-}
-Write-Ok "winget"
-
-# ─────────────────────────────────────────────────────────────
-# 2. Install Git
-# ─────────────────────────────────────────────────────────────
-Write-Step 2 7 "Installing Git..."
-
-if (!(Get-Command git -ErrorAction SilentlyContinue)) {
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    Write-Skip "git $(git --version 2>&1 | Select-String -Pattern '\d+\.\d+' | ForEach-Object { $_.Matches.Value })"
+} else {
+    Write-Host "  Installing Git..." -ForegroundColor Gray
     winget install -e --id Git.Git --accept-source-agreements --accept-package-agreements
     $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-}
-if (Get-Command git -ErrorAction SilentlyContinue) {
-    Write-Ok "git $(git --version)"
-} else {
-    Write-Warn "Git installed but needs terminal restart"
-}
-
-# ─────────────────────────────────────────────────────────────
-# 3. Install Node.js
-# ─────────────────────────────────────────────────────────────
-Write-Step 3 7 "Installing Node.js..."
-
-if (!(Get-Command node -ErrorAction SilentlyContinue)) {
-    winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-}
-if (Get-Command node -ErrorAction SilentlyContinue) {
-    Write-Ok "node $(node --version)"
-} else {
-    Write-Host "  ✗ Node.js needs terminal restart. Close and re-run this script." -ForegroundColor Red
-    exit 1
-}
-
-# ─────────────────────────────────────────────────────────────
-# 4. Install Tailscale (for connectivity)
-# ─────────────────────────────────────────────────────────────
-Write-Step 4 7 "Installing Tailscale..."
-
-if (!(Get-Command tailscale -ErrorAction SilentlyContinue)) {
-    winget install -e --id Tailscale.Tailscale --accept-source-agreements --accept-package-agreements
-    Write-Warn "Tailscale installed - log in after setup: tailscale login"
-} else {
-    $tsStatus = tailscale status 2>&1
-    if ($tsStatus -match "stopped") {
-        Write-Warn "Tailscale installed but not running"
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        Write-Ok "git installed"
     } else {
-        Write-Ok "Tailscale connected"
+        Write-Host "  ✗ Git needs terminal restart" -ForegroundColor Red
+        exit 1
     }
 }
 
 # ─────────────────────────────────────────────────────────────
-# 5. Install Clawdbot
+# 2. Check Node.js
 # ─────────────────────────────────────────────────────────────
-Write-Step 5 7 "Installing Clawdbot..."
+Write-Step 2 5 "Checking Node.js..."
 
-$npmPrefix = npm config get prefix 2>$null
-npm install -g clawdbot
-if ($LASTEXITCODE -eq 0) {
-    Write-Ok "clawdbot $(clawdbot --version)"
+if (Get-Command node -ErrorAction SilentlyContinue) {
+    Write-Skip "node $(node --version)"
 } else {
-    Write-Host "  ✗ Failed to install clawdbot" -ForegroundColor Red
-    exit 1
+    Write-Host "  Installing Node.js..." -ForegroundColor Gray
+    winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    if (Get-Command node -ErrorAction SilentlyContinue) {
+        Write-Ok "node installed"
+    } else {
+        Write-Host "  ✗ Node.js needs terminal restart. Re-run script after." -ForegroundColor Red
+        exit 1
+    }
 }
 
 # ─────────────────────────────────────────────────────────────
-# 6. Clone/sync workspace
+# 3. Check Tailscale
 # ─────────────────────────────────────────────────────────────
-Write-Step 6 7 "Setting up workspace..."
+Write-Step 3 5 "Checking Tailscale..."
 
+if (Get-Command tailscale -ErrorAction SilentlyContinue) {
+    $tsIP = tailscale ip -4 2>&1
+    if ($tsIP -match "^\d+\.\d+\.\d+\.\d+") {
+        Write-Skip "tailscale ($tsIP)"
+    } else {
+        Write-Skip "tailscale (not logged in - run: tailscale login)"
+    }
+} else {
+    Write-Host "  Installing Tailscale..." -ForegroundColor Gray
+    winget install -e --id Tailscale.Tailscale --accept-source-agreements --accept-package-agreements
+    Write-Warn "Tailscale installed - run: tailscale login"
+}
+
+# ─────────────────────────────────────────────────────────────
+# 4. Install Clawdbot + Clone workspace
+# ─────────────────────────────────────────────────────────────
+Write-Step 4 5 "Setting up Clawdbot..."
+
+# Install clawdbot globally
+if (!(Get-Command clawdbot -ErrorAction SilentlyContinue)) {
+    Write-Host "  Installing clawdbot..." -ForegroundColor Gray
+    npm install -g clawdbot
+}
+Write-Ok "clawdbot $(clawdbot --version 2>&1)"
+
+# Clone or update workspace
 if (!(Test-Path $ClawdDir)) {
-    Write-Host "  Cloning workspace..." -ForegroundColor Gray
+    Write-Host "  Cloning workspace to $ClawdDir..." -ForegroundColor Gray
     git clone $GatewayRepo $ClawdDir
     if ($LASTEXITCODE -ne 0) {
         Write-Warn "Clone failed - creating fresh workspace"
         New-Item -ItemType Directory -Path $ClawdDir -Force | Out-Null
     }
-    Write-Ok "Cloned to $ClawdDir"
 } else {
-    Write-Host "  Workspace exists, syncing..." -ForegroundColor Gray
+    Write-Host "  Workspace exists, pulling latest..." -ForegroundColor Gray
     Push-Location $ClawdDir
-    git fetch origin 2>$null
     git pull origin main 2>$null
     Pop-Location
-    Write-Ok "Synced $ClawdDir"
 }
+Write-Ok "Workspace: $ClawdDir"
 
 # ─────────────────────────────────────────────────────────────
-# 7. Create config and scripts
+# 5. Create config files
 # ─────────────────────────────────────────────────────────────
-Write-Step 7 7 "Creating configuration..."
+Write-Step 5 5 "Creating configuration..."
 
-# Node identity file
-$nodeIdentity = "$ClawdDir\.clawdbot-node"
-@"
-{
-  "name": "$NodeName",
-  "type": "mirror",
-  "created": "$(Get-Date -Format o)"
-}
-"@ | Set-Content $nodeIdentity
-Write-Ok "Node identity: $NodeName"
-
-# Environment template
-$envFile = "$ClawdDir\.env"
-if (!(Test-Path $envFile)) {
-    @"
-# Clawdbot API Keys
-# Get from: https://console.anthropic.com/
-ANTHROPIC_API_KEY=sk-ant-xxxxx
-
-# Telegram Bot Token (same as home - shared bot!)
-# Get from: @BotFather on Telegram
-TELEGRAM_BOT_TOKEN=xxxxx
-
-# Optional: Other services
-# SLACK_APP_TOKEN=xapp-...
-# SLACK_BOT_TOKEN=xoxb-...
-"@ | Set-Content $envFile
-    Write-Warn "Created .env template - EDIT WITH YOUR KEYS!"
-} else {
-    Write-Ok ".env exists"
-}
-
-# Sync script
-$syncScript = "$ClawdDir\scripts\sync.ps1"
+# Ensure scripts folder exists
 if (!(Test-Path "$ClawdDir\scripts")) {
     New-Item -ItemType Directory -Path "$ClawdDir\scripts" -Force | Out-Null
 }
-@'
-# Sync workspace with git
-param([switch]$Push, [switch]$Pull)
 
+# Node identity
+$nodeIdentity = "$ClawdDir\.clawdbot-node"
+@"
+{"name": "$NodeName", "type": "mirror", "created": "$(Get-Date -Format o)"}
+"@ | Set-Content $nodeIdentity
+
+# Environment file with actual keys
+$envFile = "$ClawdDir\.env"
+@"
+# ═══════════════════════════════════════════════════════════
+# Broodbrother Environment - WORK PC
+# ═══════════════════════════════════════════════════════════
+
+# Anthropic (for Claude) - Option 1: API Key
+# Get from: https://console.anthropic.com/settings/keys
+ANTHROPIC_API_KEY=
+
+# Anthropic - Option 2: Use OAuth instead (recommended)
+# After setup, run: clawdbot auth
+# This will open browser to authenticate
+
+# Telegram Bot Token (SAME bot as home!)
+TELEGRAM_BOT_TOKEN=8448546128:AAEb-GAEX4sqFyzNdwvFO1wFWvWhuPPtKsM
+
+# ═══════════════════════════════════════════════════════════
+"@ | Set-Content $envFile
+
+# Sync script
+@'
+param([switch]$Push, [switch]$Pull)
 $ErrorActionPreference = "Stop"
 Push-Location $PSScriptRoot\..
-
 if ($Pull -or (!$Push -and !$Pull)) {
     Write-Host "Pulling latest..." -ForegroundColor Cyan
     git pull origin main
 }
-
 if ($Push) {
     Write-Host "Pushing changes..." -ForegroundColor Cyan
     git add -A
-    $msg = "sync from $env:COMPUTERNAME @ $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
-    git commit -m $msg 2>$null
+    git commit -m "sync from $env:COMPUTERNAME @ $(Get-Date -Format 'yyyy-MM-dd HH:mm')" 2>$null
     git push origin main
 }
-
 Pop-Location
-Write-Host "Done!" -ForegroundColor Green
-'@ | Set-Content $syncScript
+'@ | Set-Content "$ClawdDir\scripts\sync.ps1"
 
 # Start script
-$startScript = "$ClawdDir\start.ps1"
 @"
-# Start Clawdbot Gateway
-Push-Location `$PSScriptRoot
-Write-Host "Syncing workspace..." -ForegroundColor Cyan
+Push-Location $ClawdDir
+Write-Host "Syncing..." -ForegroundColor Cyan
 & .\scripts\sync.ps1 -Pull
-Write-Host "Starting gateway..." -ForegroundColor Cyan
+Write-Host "Starting Broodbrother..." -ForegroundColor Green
 clawdbot gateway start
 Pop-Location
-"@ | Set-Content $startScript
+"@ | Set-Content "$ClawdDir\start.ps1"
 
-# Stop script
-$stopScript = "$ClawdDir\stop.ps1"
+# Stop script  
 @"
-# Stop Clawdbot Gateway and sync
-Push-Location `$PSScriptRoot
-Write-Host "Stopping gateway..." -ForegroundColor Cyan
+Push-Location $ClawdDir
+Write-Host "Stopping Broodbrother..." -ForegroundColor Yellow
 clawdbot gateway stop
-Write-Host "Syncing workspace..." -ForegroundColor Cyan
+Write-Host "Syncing..." -ForegroundColor Cyan
 & .\scripts\sync.ps1 -Push
 Pop-Location
-"@ | Set-Content $stopScript
+"@ | Set-Content "$ClawdDir\stop.ps1"
 
-Write-Ok "Created start.ps1, stop.ps1, scripts\sync.ps1"
+Write-Ok "Created start.ps1, stop.ps1, .env"
 
 # ─────────────────────────────────────────────────────────────
-# Done!
+# Done - Open .env for editing
 # ─────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "╔═══════════════════════════════════════════════════╗" -ForegroundColor Green
-Write-Host "║  ✓ Mirror Setup Complete!                         ║" -ForegroundColor Green
+Write-Host "║  ✓ Setup Complete!                                ║" -ForegroundColor Green
 Write-Host "╚═══════════════════════════════════════════════════╝" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next steps:" -ForegroundColor Cyan
+Write-Host "  Telegram token: Already filled! ✓" -ForegroundColor Green
 Write-Host ""
-Write-Host "  1. Edit API keys:" -ForegroundColor White
-Write-Host "     notepad $ClawdDir\.env" -ForegroundColor Gray
+Write-Host "  For Anthropic, choose ONE:" -ForegroundColor Cyan
+Write-Host "    A) Add API key to .env (opening now...)" -ForegroundColor White
+Write-Host "    B) Run: clawdbot auth (uses browser OAuth)" -ForegroundColor White
 Write-Host ""
-Write-Host "  2. Log into Tailscale:" -ForegroundColor White
-Write-Host "     tailscale login" -ForegroundColor Gray
+Write-Host "  Then test:" -ForegroundColor Cyan
+Write-Host "    cd $ClawdDir" -ForegroundColor Gray
+Write-Host "    .\start.ps1" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  3. Test the gateway:" -ForegroundColor White
-Write-Host "     cd $ClawdDir" -ForegroundColor Gray
-Write-Host "     .\start.ps1" -ForegroundColor Gray
+Write-Host "  Home Tailscale IP: 100.118.246.104" -ForegroundColor Magenta
 Write-Host ""
-Write-Host "  4. From Telegram, use:" -ForegroundColor White
-Write-Host "     /handoff work  - switch to this PC" -ForegroundColor Gray
-Write-Host "     /handoff home  - switch back home" -ForegroundColor Gray
-Write-Host ""
-Write-Host "Tailscale IP:" -ForegroundColor Cyan
-tailscale ip -4 2>$null
-Write-Host ""
-Write-Host "The web grows. 🕷️" -ForegroundColor Magenta
+
+# Open .env in notepad
+Start-Process notepad.exe -ArgumentList $envFile
+
+Write-Host "Opening .env for editing... 🕷️" -ForegroundColor Yellow
