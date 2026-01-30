@@ -1,0 +1,22 @@
+# Broodbrother Mirror Nodes
+# Used for /handoff command
+
+nodes:
+  home:
+    name: "Home Server"
+    tailscale_ip: "100.118.246.104"
+    ssh_user: "htsapenko"
+    clawd_dir: "/home/htsapenko/clawd"
+    start_cmd: "clawdbot gateway start"
+    stop_cmd: "clawdbot gateway stop"
+    
+  work:
+    name: "Work PC"
+    tailscale_ip: null  # Fill in after setup
+    ssh_user: null      # Fill in (Windows user)
+    clawd_dir: null     # Usually C:\Users\<user>\clawd
+    start_cmd: "powershell -File start.ps1"
+    stop_cmd: "powershell -File stop.ps1"
+
+# Current active node (updated by handoff)
+active: home

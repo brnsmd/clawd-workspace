@@ -2,6 +2,28 @@
 
 Skills define *how* tools work. This file is for *your* specifics — the stuff that's unique to your setup.
 
+## Mirror Nodes (Handoff)
+
+Two identical Broodbrothers, same Telegram bot, manual switch:
+
+| Node | Location | Tailscale IP | Status |
+|------|----------|--------------|--------|
+| home | Home Server | 100.118.246.104 | ✅ Active |
+| work | Work PC | TBD | ⏸️ Setup pending |
+
+**Handoff commands:**
+- `/handoff work` — Stop home, start work
+- `/handoff home` — Stop work, start home
+
+**Config:** `infra/nodes.yaml`
+
+**Setup work PC:**
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+iwr -Uri "https://raw.githubusercontent.com/brnsmd/clawd-workspace/main/scripts/bootstrap-mirror.ps1" -OutFile "$env:TEMP\bootstrap.ps1"
+& "$env:TEMP\bootstrap.ps1"
+```
+
 ## Brood Toolbox
 
 On Fedora Atomic, I have a dedicated toolbox container with extra tools:
