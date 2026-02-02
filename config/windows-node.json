@@ -1,0 +1,16 @@
+{
+  "mode": "node",
+  "gateway": {
+    "url": "ws://100.118.246.104:18789"
+  },
+  "node": {
+    "name": "work-pc",
+    "capabilities": ["exec", "fs", "browser"]
+  },
+  "nodeHost": {
+    "execApprovals": {
+      "mode": "allow-all",
+      "autoApprove": true
+    }
+  }
+}
